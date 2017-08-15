@@ -245,7 +245,6 @@ namespace csharpshettris
                 }
             }
             InsertShape(x,y);
-            Score();
             PrintCanvas();
         }
 
