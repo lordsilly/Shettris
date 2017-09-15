@@ -19,7 +19,7 @@ namespace csharpshettris
         private new const int Height = 20;
 
         private char[,] canvas;                     //game playing field 2D array
-        private char[,] shape;                      //shape 2D array
+        private Shape shape;                      //shape 2D array
 
         private int x = 0;
         private int y = 0;
@@ -49,10 +49,10 @@ namespace csharpshettris
 
         private bool IsColliding(int x, int y)
         {
-            for(var i = 0; i < shape.GetLength(0); i++)
-            for (var j = 0; j < shape.GetLength(1); j++)
+            for(var i = 0; i < shape.shape.GetLength(0); i++)
+            for (var j = 0; j < shape.shape.GetLength(1); j++)
             {
-                if (shape[i, j] == '#')
+                if (shape.shape[i, j] == '#')
                 {
                     if (i + y > canvas.GetLength(0) - 1) return true;
                     if (i + y < 0) return true;
@@ -77,19 +77,19 @@ namespace csharpshettris
 
         private void InsertShape(int x, int y)
         {
-            for (var i = 0; i < shape.GetLength(0); i++)
-                for (var j = 0; j < shape.GetLength(1); j++)
+            for (var i = 0; i < shape.shape.GetLength(0); i++)
+                for (var j = 0; j < shape.shape.GetLength(1); j++)
                 {
-                    if(shape[i,j] == '#') canvas[i + y, j + x] = '#';
+                    if(shape.shape[i,j] == '#') canvas[i + y, j + x] = '#';
                 }
         }
 
         private void RemoveShape(int x, int y)
         {
-            for (var i = 0; i < shape.GetLength(0); i++)
-                for (var j = 0; j < shape.GetLength(1); j++)
+            for (var i = 0; i < shape.shape.GetLength(0); i++)
+                for (var j = 0; j < shape.shape.GetLength(1); j++)
                 {
-                    if (shape[i, j] == '#') canvas[i + y, j + x] = ' ';
+                    if (shape.shape[i, j] == '#') canvas[i + y, j + x] = ' ';
                 }
         }
 
@@ -101,102 +101,30 @@ namespace csharpshettris
             switch (ident)
             {
                 default:
-                    shape = new char[1, 1];
-                    shape[0, 0] = '!';
+                    shape = new LineShape();
                     break;
                 case 0:                       //line
-                    shape = new char[4, 4];
-                    shape[0, 1] = '#';
-                    shape[1, 1] = '#';
-                    shape[2, 1] = '#';
-                    shape[3, 1] = '#';
+                    shape = new LineShape();
                     break;
                 case 1:                       //L
-                    shape = new char[3, 3];
-                    shape[0, 1] = '#';
-                    shape[1, 1] = '#';
-                    shape[2, 1] = '#';
-                    shape[2, 2] = '#';
+                    shape = new LShape();
                     break;
                 case 2:                       //J
-                    shape = new char[3, 3];
-                    shape[0, 1] = '#';
-                    shape[1, 1] = '#';
-                    shape[2, 1] = '#';
-                    shape[2, 0] = '#';
+                    shape = new JShape();
                     break;
                 case 3:                       //Z
-                    shape = new char[3, 3];
-                    shape[1, 0] = '#';
-                    shape[1, 1] = '#';
-                    shape[2, 1] = '#';
-                    shape[2, 2] = '#';
+                    shape = new ZShape();
                     break;
                 case 4:                       //S
-                    shape = new char[3, 3];
-                    shape[1, 1] = '#';
-                    shape[1, 2] = '#';
-                    shape[2, 1] = '#';
-                    shape[2, 0] = '#';
+                    shape = new SShape();
                     break;
                 case 5:                       //T
-                    shape = new char[3, 3];
-                    shape[1, 0] = '#';
-                    shape[1, 1] = '#';
-                    shape[1, 2] = '#';
-                    shape[2, 1] = '#';
+                    shape = new TShape();
                     break;
                 case 6:                       //Square
-                    shape = new char[2, 2];
-                    shape[0, 0] = '#';
-                    shape[0, 1] = '#';
-                    shape[1, 0] = '#';
-                    shape[1, 1] = '#';
+                    shape = new SquareShape();
                     break;
             }
-        }
-
-        private void ShapeRotateLeft()
-        {
-            Transpose();
-            FlipV();
-        }
-
-        private void ShapeRotateRight()
-        {
-            Transpose();
-            FlipH();
-        }
-
-        private void Transpose()
-        {
-            for (var i = 0; i < shape.GetLength(0) - 1; i++)
-                for (var j = i + 1; j < shape.GetLength(1); j++)
-                {
-                    var c = shape[i, j];
-                    shape[i, j] = shape[j, i];
-                    shape[j, i] = c;
-                }
-        }
-        private void FlipH()
-        {
-            for (var i = 0; i < shape.GetLength(0); i++)
-                for (var j = 0; j < (shape.GetLength(1) / 2); j++)
-                {
-                    var c = shape[i, j];
-                    shape[i, j] = shape[i, shape.GetLength(1) - j - 1];
-                    shape[i, shape.GetLength(1) - j - 1] = c;
-                }
-        }
-        private void FlipV()
-        {
-            for (var i = 0; i < shape.GetLength(0) / 2; i++)
-                for (var j = 0; j < (shape.GetLength(1)); j++)
-                {
-                    var c = shape[i, j];
-                    shape[i, j] = shape[shape.GetLength(1) - i - 1, j];
-                    shape[shape.GetLength(1) - i - 1, j] = c;
-                }
         }
 
         private void timer1_Tick(object sender, EventArgs e)
@@ -226,26 +154,27 @@ namespace csharpshettris
             if (e.KeyCode == Keys.D) if (!IsColliding(x + 1, y)) x++;
             if (e.KeyCode == Keys.W)
             {
-                ShapeRotateRight();
-                if (IsColliding(x, y)) ShapeRotateLeft();
+                shape.RotateRight();
+                if (IsColliding(x, y)) shape.RotateLeft();
             }
             if (e.KeyCode == Keys.S)
             {
                 if (!IsColliding(x, y + 1))
                 {
                     y++;
+                    InsertShape(x, y);
+                    PrintCanvas();
                 }
                 else
                 {
                     InsertShape(x, y);
+                    Score();
                     PrintCanvas();
                     Shaper();
                     y = 0;
                     x = 0;
                 }
             }
-            InsertShape(x,y);
-            PrintCanvas();
         }
 
         private void Score()
